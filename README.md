@@ -2,7 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/King-pe/PeterPay-API-Documentation?style=for-the-badge&color=yellow)](https://github.com/King-pe/PeterPay-API-Documentation/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/King-pe/PeterPay-API-Documentation?style=for-the-badge&color=blue)](https://github.com/King-pe/PeterPay-API-Documentation/network/members)
-[![Donate](https://img.shields.io/badge/Donate-Orange?style=for-the-badge&logo=paypal&logoColor=white)](https://www.peterpay.link/pay?code=bf591266)
+[![Donate](https://img.shields.io/badge/Donate-Orange?style=for-the-badge&logo=paypal&logoColor=white)](https://www.peterpay.link/pay?code=844ac71e)
 
 Karibu kwenye mwongozo wa PeterPay API. Mfumo huu unakuwezesha kupokea malipo ya simu (Mobile Money) moja kwa moja kwenye tovuti au mfumo wako kwa urahisi na usalama.
 
@@ -144,7 +144,7 @@ if (hash_equals($calculated, $signature)) {
 ## 🤝 Kuchangia (Support)
 Ikiwa unataka kusaidia maendeleo ya mfumo huu, unaweza kutoa mchango wako hapa:
 
-[![Donate](https://img.shields.io/badge/Donate-Orange?style=for-the-badge&logo=paypal&logoColor=white)](https://www.peterpay.link/pay?code=bf591266)
+[![Donate](https://img.shields.io/badge/Donate-Orange?style=for-the-badge&logo=paypal&logoColor=white)](https://www.peterpay.link/pay?code=844ac71e)
 
 ---
 
