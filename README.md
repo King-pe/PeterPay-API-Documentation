@@ -36,51 +36,80 @@ Use this endpoint to initiate a payment request. The customer will receive a USS
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `amount` | Float | Yes | Payment amount (Minimum: 500 TZS). |
-| `buyer_phone` | String | Yes | Customer's phone number in international format (e.g., 2557XXXXXXXX). |
-| `buyer_name` | String | No | Customer's name. |
-| `buyer_email` | String | No | Customer's email address. |
+| `buyer_phone` | String | Yes | Customer\'s phone number in international format (e.g., 2557XXXXXXXX). |
+| `buyer_name` | String | No | Customer\'s name. |
+| `buyer_email` | String | No | Customer\'s email address. |
 
 ### Implementation Examples
 
 #### PHP (Using cURL)
 ```php
-$url = 'https://www.peterpay.link/api/v1/create_order';
-$data = [
-    'amount' => 1000,
-    'buyer_phone' => '255753033342',
-    'buyer_name' => 'John Doe',
-    'buyer_email' => 'john@example.com'
+<?php
+
+$amount = 1000;
+$phone = "255753033342"; // Example phone number
+$name = "John Doe";
+$email = "john.doe@example.com";
+
+// PAYLOAD
+$payload = [
+    "amount" => $amount,
+    "buyer_phone" => $phone,
+    "buyer_name" => $name,
+    "buyer_email" => $email
 ];
 
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-    'X-API-KEY: YOUR_API_KEY'
+$ch = curl_init("https://www.peterpay.link/api/v1/create_order");
+
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'X-API-KEY: pk_xxxxxxxxx' // Replace with your actual API Key
+    ],
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($payload),
+    CURLOPT_RETURNTRANSFER => true,
+
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_CONNECTTIMEOUT => 10,
+
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_MAXREDIRS => 5,
+
+    CURLOPT_VERBOSE => true,
+
+    // TEMP SSL (test only) - REMOVE IN PRODUCTION AND USE VALID SSL
+    CURLOPT_SSL_VERIFYHOST => 0,
+    CURLOPT_SSL_VERIFYPEER => 0
 ]);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 $response = curl_exec($ch);
+
+if (curl_errno($ch)) {
+    echo 'cURL Error: ' . curl_error($ch);
+} else {
+    print_r(json_decode($response, true));
+}
+
 curl_close($ch);
 
-print_r(json_decode($response, true));
+?>
 ```
 
 #### JavaScript (Node.js / Frontend)
 ```javascript
-const axios = require('axios');
+const axios = require(\'axios\');
 
 const data = {
     amount: 1000,
-    buyer_phone: '255753033342',
-    buyer_name: 'John Doe'
+    buyer_phone: \'255753033342\',
+    buyer_name: \'John Doe\'
 };
 
-axios.post('https://www.peterpay.link/api/v1/create_order', data, {
+axios.post(\'https://www.peterpay.link/api/v1/create_order\', data, {
     headers: {
-        'Content-Type': 'application/json',
-        'X-API-KEY': 'YOUR_API_KEY'
+        \'Content-Type\': \'application/json\',
+        \'X-API-KEY\': \'YOUR_API_KEY\'
     }
 })
 .then(response => console.log(response.data))
@@ -151,11 +180,11 @@ To ensure requests are from PeterPay, verify the `X-PeterPay-Signature` header. 
 
 #### PHP Verification
 ```php
-$payload = file_get_contents('php://input');
-$signature = $_SERVER['HTTP_X_PETERPAY_SIGNATURE'];
-$secret = 'YOUR_API_SECRET';
+$payload = file_get_contents(\'php://input\');
+$signature = $_SERVER[\'HTTP_X_PETERPAY_SIGNATURE\'];
+$secret = \'YOUR_API_SECRET\';
 
-$calculated = hash_hmac('sha256', $payload, $secret);
+$calculated = hash_hmac(\'sha256\', $payload, $secret);
 
 if (hash_equals($calculated, $signature)) {
     // Request is valid
@@ -170,13 +199,13 @@ If you are using Vercel, you can easily handle payments using Serverless Functio
 ### Example: `/api/pay.js`
 ```javascript
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+  if (req.method !== \'POST\') return res.status(405).end();
 
-  const response = await fetch('https://www.peterpay.link/api/v1/create_order', {
-    method: 'POST',
+  const response = await fetch(\'https://www.peterpay.link/api/v1/create_order\', {
+    method: \'POST\',
     headers: {
-      'Content-Type': 'application/json',
-      'X-API-KEY': process.env.PETERPAY_API_KEY
+      \'Content-Type\': \'application/json\',
+      \'X-API-KEY\': process.env.PETERPAY_API_KEY
     },
     body: JSON.stringify(req.body)
   });
@@ -186,6 +215,15 @@ export default async function handler(req, res) {
 }
 ```
 *Note: Ensure you add `PETERPAY_API_KEY` to your Vercel Environment Variables.*
+
+---
+
+## 📚 Additional Documentation
+
+For more in-depth guides on securing your integration and handling webhooks, please refer to these dedicated documents:
+
+*   [**Security and SSL Configuration Guide**](SECURITY_AND_SSL.md): Learn about securing your API keys, using HTTPS, and obtaining free SSL certificates.
+*   [**Webhook Integration and Best Practices**](WEBHOOK_INTEGRATION.md): A comprehensive guide on setting up, handling, and securing PeterPay webhooks.
 
 ---
 
