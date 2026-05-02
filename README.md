@@ -4,20 +4,20 @@
 [![GitHub forks](https://img.shields.io/github/forks/King-pe/PeterPay-API-Documentation?style=for-the-badge&color=blue)](https://github.com/King-pe/PeterPay-API-Documentation/network/members)
 [![Donate](https://img.shields.io/badge/Donate-Orange?style=for-the-badge&logo=paypal&logoColor=white)](https://www.peterpay.link/pay?code=844ac71e)
 
-Karibu kwenye mwongozo wa PeterPay API. Mfumo huu unakuwezesha kupokea malipo ya simu (Mobile Money) moja kwa moja kwenye tovuti au mfumo wako kwa urahisi na usalama.
+Welcome to the official PeterPay API documentation. PeterPay allows you to seamlessly integrate mobile money payments (M-Pesa, Tigo Pesa, Airtel Money, Halotel, etc.) into your website, mobile app, or backend system.
 
 ---
 
-## 📌 Utangulizi
-PeterPay API inakuwezesha kuunganisha malipo ya simu (M-Pesa, Tigo Pesa, Airtel Money, n.k.) kwenye application yako.
+## 📌 Introduction
+PeterPay provides a simple REST API to initiate USSD Push (STK Push) payments and verify transaction statuses in real-time.
 
 - **Base URL:** `https://www.peterpay.link/api/v1`
-- **Dashboard:** [Pata API Key Hapa](https://www.peterpay.link/dashboard.php)
+- **Dashboard:** [Get your API Key here](https://www.peterpay.link/dashboard.php)
 
 ---
 
 ## 🔐 Authentication
-Maombi yote ya API yanapaswa kuwa na `X-API-KEY` kwenye header. Unaweza kupata API Key yako kwenye Dashboard.
+All API requests must include the `X-API-KEY` header to identify your account.
 
 **Header Example:**
 ```http
@@ -26,27 +26,29 @@ X-API-KEY: pk_live_xxxxxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-## 💳 1. Create Order (Kuanzisha Malipo)
-Tumia endpoint hii kuanzisha muamala wa malipo. Mteja atapokea ombi la USSD (Push) kwenye simu yake.
+## 💳 1. Create Order (Initiate Payment)
+Use this endpoint to initiate a payment request. The customer will receive a USSD Push (STK Push) notification on their phone to enter their PIN.
 
 - **Method:** `POST`
 - **Endpoint:** `/create_order`
 
-### Parameters
+### Request Parameters
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `amount` | Float | Yes | Kiasi cha pesa (Min: 500 TZS). |
-| `buyer_phone` | String | Yes | Namba ya simu ya mteja (255...). |
-| `buyer_name` | String | No | Jina la mteja. |
-| `buyer_email` | String | No | Barua pepe ya mteja. |
+| `amount` | Float | Yes | Payment amount (Minimum: 500 TZS). |
+| `buyer_phone` | String | Yes | Customer's phone number in international format (e.g., 2557XXXXXXXX). |
+| `buyer_name` | String | No | Customer's name. |
+| `buyer_email` | String | No | Customer's email address. |
 
-### Mfano wa Request (PHP)
+### Implementation Examples
+
+#### PHP (Using cURL)
 ```php
 $url = 'https://www.peterpay.link/api/v1/create_order';
 $data = [
     'amount' => 1000,
     'buyer_phone' => '255753033342',
-    'buyer_name' => 'Peter Joram',
+    'buyer_name' => 'John Doe',
     'buyer_email' => 'john@example.com'
 ];
 
@@ -55,7 +57,7 @@ curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
-    'X-API-KEY: pk_live_xxxxxxxx'
+    'X-API-KEY: YOUR_API_KEY'
 ]);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
@@ -63,6 +65,26 @@ $response = curl_exec($ch);
 curl_close($ch);
 
 print_r(json_decode($response, true));
+```
+
+#### JavaScript (Node.js / Frontend)
+```javascript
+const axios = require('axios');
+
+const data = {
+    amount: 1000,
+    buyer_phone: '255753033342',
+    buyer_name: 'John Doe'
+};
+
+axios.post('https://www.peterpay.link/api/v1/create_order', data, {
+    headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': 'YOUR_API_KEY'
+    }
+})
+.then(response => console.log(response.data))
+.catch(error => console.error(error));
 ```
 
 ### Success Response
@@ -79,8 +101,8 @@ print_r(json_decode($response, true));
 
 ---
 
-## 🔍 2. Check Status (Kukagua Hali ya Malipo)
-Tumia endpoint hii kukagua kama muamala umekamilika au la.
+## 🔍 2. Check Status (Verification)
+Verify if a transaction was successful, failed, or is still pending.
 
 - **Method:** `POST`
 - **Endpoint:** `/order_status`
@@ -92,7 +114,7 @@ Tumia endpoint hii kukagua kama muamala umekamilika au la.
 }
 ```
 
-**Response:**
+**Response Example:**
 ```json
 {
   "status": "success",
@@ -109,7 +131,7 @@ Tumia endpoint hii kukagua kama muamala umekamilika au la.
 ---
 
 ## 🪝 3. Webhooks (Callbacks)
-Tunatuma taarifa kwenye server yako papo hapo malipo yanapokamilika. Hakikisha umeweka Webhook URL yako kwenye Dashboard.
+PeterPay sends real-time notifications to your server when a payment is completed. Configure your Webhook URL in the PeterPay Dashboard.
 
 ### Payload Example
 ```json
@@ -125,8 +147,9 @@ Tunatuma taarifa kwenye server yako papo hapo malipo yanapokamilika. Hakikisha u
 ```
 
 ### Security (Signature Verification)
-Tunatuma header ya `X-PeterPay-Signature` ambayo ni HMAC SHA256 ya payload kwa kutumia **API Secret** yako.
+To ensure requests are from PeterPay, verify the `X-PeterPay-Signature` header. It is an HMAC SHA256 hash of the payload using your **API Secret**.
 
+#### PHP Verification
 ```php
 $payload = file_get_contents('php://input');
 $signature = $_SERVER['HTTP_X_PETERPAY_SIGNATURE'];
@@ -135,21 +158,56 @@ $secret = 'YOUR_API_SECRET';
 $calculated = hash_hmac('sha256', $payload, $secret);
 
 if (hash_equals($calculated, $signature)) {
-    // Ombi ni halali
+    // Request is valid
 }
 ```
 
 ---
 
-## 🤝 Kuchangia (Support)
-Ikiwa unataka kusaidia maendeleo ya mfumo huu, unaweza kutoa mchango wako hapa:
+## ⚡ Vercel Integration (Next.js / Node.js)
+If you are using Vercel, you can easily handle payments using Serverless Functions (API Routes).
+
+### Example: `/api/pay.js`
+```javascript
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
+
+  const response = await fetch('https://www.peterpay.link/api/v1/create_order', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-KEY': process.env.PETERPAY_API_KEY
+    },
+    body: JSON.stringify(req.body)
+  });
+
+  const data = await response.json();
+  res.status(200).json(data);
+}
+```
+*Note: Ensure you add `PETERPAY_API_KEY` to your Vercel Environment Variables.*
+
+---
+
+## 📦 SDKs & Plugins
+- **PHP SDK:** Included in the `PeterPaySDK.php` file.
+- **WooCommerce:** [Download Plugin](https://www.peterpay.link/peterpay-woocommerce.zip)
+- **WHMCS:** [Download Gateway](https://www.peterpay.link/peterpay-whmcs.zip)
+
+---
+
+## 🤝 Support & Contributions
+If you find this documentation helpful or wish to support the development of PeterPay, consider donating:
 
 [![Donate](https://img.shields.io/badge/Donate-Orange?style=for-the-badge&logo=paypal&logoColor=white)](https://www.peterpay.link/pay?code=844ac71e)
+
+### Usage Policy
+> **Note:** Use of this code is subject to a contribution of **15,000 TZS** via the donate button. Unauthorized modification of the core logic is strictly forbidden. Please notify the developer upon implementation.
 
 ---
 
 ## 👥 Contributors
-Shukrani kwa wote waliochangia kwenye mradi huu!
+Thanks to everyone contributing to this project!
 
 <a href="https://github.com/King-pe/PeterPay-API-Documentation/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=King-pe/PeterPay-API-Documentation" />
