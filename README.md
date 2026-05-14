@@ -44,56 +44,78 @@ Use this endpoint to initiate a payment request. The customer will receive a USS
 
 #### PHP (Using cURL)
 ```php
-<?php
+function peterpay_request($endpoint, $payload){
 
-$amount = 1000;
-$phone = "255753033342"; // Example phone number
-$name = "John Doe";
-$email = "john.doe@example.com";
+    $url = PETERPAY_API_URL . $endpoint;
 
-// PAYLOAD
-$payload = [
-    "amount" => $amount,
-    "buyer_phone" => $phone,
-    "buyer_name" => $name,
-    "buyer_email" => $email
-];
+    $jsonData = json_encode($payload);
 
-$ch = curl_init("https://www.peterpay.link/api/v1/create_order");
+    $ch = curl_init($url);
 
-curl_setopt_array($ch, [
-    CURLOPT_HTTPHEADER => [
-        'Content-Type: application/json',
-        'X-API-KEY: pk_xxxxxxxxx' // Replace with your actual API Key
-    ],
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => json_encode($payload),
-    CURLOPT_RETURNTRANSFER => true,
+    curl_setopt_array($ch,[
 
-    CURLOPT_TIMEOUT => 60,
-    CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_URL => $url,
 
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_MAXREDIRS => 5,
+        CURLOPT_RETURNTRANSFER => true,
 
-    CURLOPT_VERBOSE => true,
+        CURLOPT_POST => true,
 
-    // TEMP SSL (test only) - REMOVE IN PRODUCTION AND USE VALID SSL
-    CURLOPT_SSL_VERIFYHOST => 0,
-    CURLOPT_SSL_VERIFYPEER => 0
-]);
+        CURLOPT_CUSTOMREQUEST => "POST",
 
-$response = curl_exec($ch);
+        CURLOPT_POSTFIELDS => $jsonData,
 
-if (curl_errno($ch)) {
-    echo 'cURL Error: ' . curl_error($ch);
-} else {
-    print_r(json_decode($response, true));
+        CURLOPT_HTTPHEADER => [
+
+            'Content-Type: application/json',
+
+            'Content-Length: ' . strlen($jsonData),
+
+            'Accept: application/json',
+
+            'X-API-KEY: ' . PETERPAY_API_KEY
+        ],
+
+        CURLOPT_SSL_VERIFYPEER => false,
+
+        CURLOPT_TIMEOUT => 30,
+
+        CURLOPT_CONNECTTIMEOUT => 10
+    ]);
+
+    $response = curl_exec($ch);
+
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    $curl_error = curl_error($ch);
+
+    curl_close($ch);
+
+    if($response === false){
+
+        return [
+
+            'status' => 'error',
+
+            'message' => $curl_error
+        ];
+    }
+
+    $decoded = json_decode($response,true);
+
+    if(!$decoded){
+
+        return [
+
+            'status' => 'error',
+
+            'message' => 'Invalid JSON',
+
+            'raw' => $response
+        ];
+    }
+
+    return $decoded;
 }
-
-curl_close($ch);
-
-?>
 ```
 
 #### JavaScript (Node.js / Frontend)
